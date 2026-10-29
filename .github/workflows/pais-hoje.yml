@@ -17,12 +17,17 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Validar integração do Portal da Transparência
+        run: node test-transparencia.mjs
       - name: Coletar registros oficiais de hoje (Brasília)
+        env:
+          PORTAL_TRANSPARENCIA_API_KEY: ${{ secrets.PORTAL_TRANSPARENCIA_API_KEY }}
         run: node collect-pais-hoje.mjs
       - name: Preparar somente arquivos públicos do site
         run: |
