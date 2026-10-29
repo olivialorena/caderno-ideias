@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {territorialScope,describedImpact} from './impacto.mjs';
+const proposal=summary=>({title:'PL 1/2026',type:'Proposta',summary});
+assert.equal(territorialScope(proposal('Altera o Código Penal para vedar uma conduta.')).label,'Nacional');
+assert.equal(territorialScope(proposal('Destina recursos ao Estado do Pará.')).label,'Estadual · Pará');
+assert.equal(territorialScope(proposal('Cita o Estado do Pará em um relatório.')).label,'A confirmar');
+assert.equal(territorialScope(proposal('Cria um campus no Município de União dos Palmares, no Estado de Alagoas.')).label,'Municipal · União dos Palmares');
+assert.equal(territorialScope({title:'Audiência',type:'Reunião',source:'Senado Federal',summary:'Discussão sobre mobilidade.',venue:'Brasília'}).label,'A confirmar');
+assert.equal(territorialScope(proposal('Institui um programa nacional com projeto-piloto no Estado de Goiás.')).label,'Nacional');
+assert.equal(describedImpact(proposal('Altera o Código Penal para vedar uma conduta.')).text,'Propõe vedar uma conduta.');
+assert(describedImpact({...proposal('Parecer favorável.'),title:'PRL 1'}).text.includes('não representa aprovação final'));
+console.log('OK: alcance nacional/local, menção territorial sem alcance presumido, local da reunião e efeito legislativo.');

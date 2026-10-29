@@ -16,9 +16,11 @@
     for(const x of selected.slice(0,limit)){
       const card=el('article',null,'pais-card'),meta=el('div',null,'pais-meta');meta.append(el('span',x.type,'pill'),el('span',x.source));card.append(meta,el('h3',x.title));
       const tags=el('div',null,'pais-tags');for(const t of x.themes)tags.append(el('span',t));card.append(tags);
+      if(x.scope){const scope=el('span','Âmbito sugerido: '+x.scope.label,'pais-scope');scope.title=x.scope.basis;scope.tabIndex=0;scope.setAttribute('aria-label','Âmbito sugerido: '+x.scope.label+'. '+x.scope.basis);tags.append(scope);if(x.scope.place)tags.append(el('span',x.scope.place));}
+      if(x.impact){const impact=el('p',null,'pais-impact');impact.append(el('strong',x.impact.label+': '),document.createTextNode(x.impact.text));card.append(impact);}
       if(x.status)card.append(el('p',x.status,'pais-status'));
       if(x.type==='Reunião'&&x.date.includes('T'))card.append(el('p','Horário informado: '+x.date.slice(11,16)+' · Brasília','pais-status'));
-      card.append(el('p',x.summary||'Consulte o registro oficial para conhecer os detalhes.'));
+      if(x.impact){const original=el('details');original.append(el('summary','Texto da fonte'),el('p',x.summary||'Consulte o registro oficial para conhecer os detalhes.'));card.append(original);}else card.append(el('p',x.summary||'Consulte o registro oficial para conhecer os detalhes.'));
       if(x.votes?.length){const details=el('details'),summary=el('summary','Quem votou em quê · '+x.votes.length+' registros');details.append(summary);const search=el('input');search.type='search';search.placeholder='Buscar parlamentar, partido ou UF';search.setAttribute('aria-label','Buscar votos em '+x.title);details.append(search);const votes=el('div',null,'pais-votes');
         const paint=()=>{votes.replaceChildren();const q=search.value.toLocaleLowerCase('pt-BR');for(const v of x.votes.filter(v=>(v.name+' '+v.party+' '+v.uf).toLocaleLowerCase('pt-BR').includes(q))){const row=el('div');row.append(el('span',(v.name||'Nome não informado')+' · '+(v.party||'—')+'/'+(v.uf||'—')),el('strong',v.vote||'Não informado'));votes.append(row);}if(!votes.childElementCount)votes.append(el('p','Nenhum parlamentar nesta busca.'));};search.oninput=paint;details.addEventListener('toggle',()=>{if(details.open)paint();});details.append(votes);card.append(details);
       }else if(x.type==='Votação')card.append(el('p','Votos individuais não disponíveis neste retrato. Consulte a fonte oficial.','pais-status'));
@@ -29,7 +31,7 @@
     root.querySelectorAll('[data-pais-theme]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.paisTheme===theme));});
     const sources=$('#pais-sources');sources.replaceChildren();for(const s of data?.sources||[]){const p=el('p');p.append(link(s.name,s.url),document.createTextNode(' · '+(!current?'aguardando dados de hoje':s.status==='ok'?s.count+' registro(s)':s.status==='unconfigured'?'aguardando configuração':'indisponível nesta atualização')));if(current&&s.message)p.append(el('span',' '+s.message));if(s.scope)p.append(el('span',' '+s.scope));sources.append(p);}
     const transparency=data?.sources?.find(s=>s.name.startsWith('Portal da Transparência'));
-    const notice=$('#pais-transparency');if(notice)notice.textContent=!current?'Portal da Transparência: aguardando a coleta de hoje.':transparency?('Portal da Transparência: '+transparency.message):'Portal da Transparência: aguardando a próxima coleta.';
+    const notice=$('#pais-transparency');if(notice){notice.hidden=type!=='Despesa';notice.textContent=!current?'Portal da Transparência: aguardando a coleta de hoje.':transparency?('Portal da Transparência: '+transparency.message):'Portal da Transparência: aguardando a próxima coleta.';}
   }
   async function load(){if(busy)return;busy=true;$('#pais-refresh').disabled=true;$('#pais-update').textContent='Consultando o retrato oficial…';
     try{const r=await fetch('./pais-hoje.json?t='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error();const next=await r.json();if(!Array.isArray(next.items)||!Array.isArray(next.sources))throw Error();data=next;

@@ -15,3 +15,4 @@ const limited=await collectTransparency(day,key,{maxPages:1,fetcher:async()=>({o
 const denied=await collectTransparency(day,key,{fetcher:async()=>({ok:false,status:401})});assert.equal(denied.source.status,'error');assert(!JSON.stringify(denied).includes(key));
 const missing=await collectTransparency(day,'',{fetcher:()=>{throw Error('Should not call')}});assert.equal(missing.source.status,'unconfigured');
 console.log('OK: autenticação por header, paginação, recorte de data/fase, amostra limitada e ausência de chave na saída.');
+await import('./test-impacto.mjs');

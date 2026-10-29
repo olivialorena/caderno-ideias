@@ -1,6 +1,7 @@
 import {writeFile, mkdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {collectTransparency,paymentCard} from './transparencia.mjs';
+import {annotateItem} from './impacto.mjs';
 
 export function brasiliaDay(date = new Date()) {
   return new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
@@ -69,7 +70,7 @@ export async function collect(day=brasiliaDay()) {
   for(const row of transparency.rows){const card=paymentCard(row,day,topics);if(card){card.summary=excerpt(card.summary,600);items.push(card);transparency.source.count++;}}
   sources.push(transparency.source);
   const unique=[...new Map(items.map(x=>[x.id,x])).values()];
-  return {date:day,updatedAt:new Date().toISOString(),items:unique,sources};
+  return {date:day,updatedAt:new Date().toISOString(),items:unique.map(annotateItem),sources};
 }
 if(process.argv[1]===fileURLToPath(import.meta.url)) {
   const data=await collect();const output=new URL('./pais-hoje.json',import.meta.url);await mkdir(new URL('./',import.meta.url),{recursive:true});await writeFile(output,JSON.stringify(data));console.log(JSON.stringify({date:data.date,items:data.items.length,sources:data.sources}));
