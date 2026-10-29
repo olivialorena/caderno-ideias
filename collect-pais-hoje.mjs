@@ -1,5 +1,6 @@
 import {writeFile, mkdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
+import {collectTransparency,paymentCard} from './transparencia.mjs';
 
 export function brasiliaDay(date = new Date()) {
   return new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
@@ -64,6 +65,9 @@ export async function collect(day=brasiliaDay()) {
       const link=decode(tag('link'));add(name,'Notícia',link,decode(tag('title')),decode(tag('description')),link,new Date(date).toISOString(),'Publicação oficial · resumo da fonte');
     }
   });
+  const transparency=await collectTransparency(day,process.env.PORTAL_TRANSPARENCIA_API_KEY);
+  for(const row of transparency.rows){const card=paymentCard(row,day,topics);if(card){card.summary=excerpt(card.summary,600);items.push(card);transparency.source.count++;}}
+  sources.push(transparency.source);
   const unique=[...new Map(items.map(x=>[x.id,x])).values()];
   return {date:day,updatedAt:new Date().toISOString(),items:unique,sources};
 }

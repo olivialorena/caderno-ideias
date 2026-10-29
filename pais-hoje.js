@@ -10,7 +10,7 @@
     const current=data?.date===day(),items=current?data.items:[];
     const text=$('#pais-search').value.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();
     const selected=items.filter(x=>(theme==='Todos'||x.themes.includes(theme))&&(type==='Tudo'||x.type===type)&&(!text||(x.title+' '+x.summary+' '+x.source).normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().includes(text)));
-    const priority={'Notícia':0,'Votação':1,'Reunião':2,'Proposta':3};selected.sort((a,b)=>priority[a.type]-priority[b.type]||b.date.localeCompare(a.date));
+    const priority={'Notícia':0,'Votação':1,'Reunião':2,'Proposta':3,'Despesa':4};selected.sort((a,b)=>priority[a.type]-priority[b.type]||b.date.localeCompare(a.date));
     const grid=$('#pais-cards');grid.replaceChildren();
     $('#pais-count').textContent=selected.length+' registro(s) nas fontes consultadas';
     for(const x of selected.slice(0,limit)){
@@ -27,7 +27,9 @@
     if(!selected.length)grid.append(el('p',!current?'O retrato de hoje ainda não está disponível. Volte em breve ou consulte as fontes abaixo.':items.length?'Nenhum registro com estes filtros hoje. Tente outro tema ou tipo de atividade.':'Ainda não há registros de hoje nas fontes disponíveis. Isso não significa ausência de atividade.','pais-empty'));
     $('#pais-more').hidden=selected.length<=limit;
     root.querySelectorAll('[data-pais-theme]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.paisTheme===theme));});
-    const sources=$('#pais-sources');sources.replaceChildren();for(const s of data?.sources||[]){const p=el('p');p.append(link(s.name,s.url),document.createTextNode(' · '+(!current?'aguardando dados de hoje':s.status==='ok'?s.count+' registro(s)':'indisponível nesta atualização')));sources.append(p);}
+    const sources=$('#pais-sources');sources.replaceChildren();for(const s of data?.sources||[]){const p=el('p');p.append(link(s.name,s.url),document.createTextNode(' · '+(!current?'aguardando dados de hoje':s.status==='ok'?s.count+' registro(s)':s.status==='unconfigured'?'aguardando configuração':'indisponível nesta atualização')));if(current&&s.message)p.append(el('span',' '+s.message));if(s.scope)p.append(el('span',' '+s.scope));sources.append(p);}
+    const transparency=data?.sources?.find(s=>s.name.startsWith('Portal da Transparência'));
+    const notice=$('#pais-transparency');if(notice)notice.textContent=!current?'Portal da Transparência: aguardando a coleta de hoje.':transparency?('Portal da Transparência: '+transparency.message):'Portal da Transparência: aguardando a próxima coleta.';
   }
   async function load(){if(busy)return;busy=true;$('#pais-refresh').disabled=true;$('#pais-update').textContent='Consultando o retrato oficial…';
     try{const r=await fetch('./pais-hoje.json?t='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error();const next=await r.json();if(!Array.isArray(next.items)||!Array.isArray(next.sources))throw Error();data=next;
