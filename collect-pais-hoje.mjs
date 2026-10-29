@@ -1,7 +1,7 @@
 import {writeFile, mkdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {collectTransparency,paymentCard} from './transparencia.mjs';
-import {annotateItem} from './impacto.mjs';
+import {annotateItem,isCompletedMeeting} from './impacto.mjs';
 
 export function brasiliaDay(date = new Date()) {
   return new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
@@ -27,7 +27,7 @@ async function camara(path, params) {
 }
 export async function collect(day=brasiliaDay()) {
   const items=[],sources=[];const compact=day.replaceAll('-','');
-  const add=(source,type,id,title,summary,url,date,status='',votes=null)=>{if(!url?.startsWith('https://'))return;items.push({id:source+':'+id,source,type,title:decode(title||type),summary:excerpt(summary),url,date,status,themes:topics(title+' '+summary),...(votes?{votes}:{})});};
+  const add=(source,type,id,title,summary,url,date,status='',votes=null)=>{if(!url?.startsWith('https://')||!isCompletedMeeting({type,status}))return;items.push({id:source+':'+id,source,type,title:decode(title||type),summary:excerpt(summary),url,date,status,themes:topics(title+' '+summary),...(votes?{votes}:{})});};
   async function source(name,url,run){try{const before=items.length;await run();sources.push({name,url,status:'ok',count:items.length-before});}catch(e){sources.push({name,url,status:'error',message:'Fonte temporariamente indisponível'});console.error(name+': '+e.message);}}
   await source('Câmara · propostas','https://www.camara.leg.br/busca-portal/proposicoes/pesquisa-simplificada',async()=>{
     const rows=await camara('proposicoes',{dataApresentacaoInicio:day,dataApresentacaoFim:day});

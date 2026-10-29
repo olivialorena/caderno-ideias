@@ -7,7 +7,7 @@
   const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
   function link(text,url){const a=el('a',text);try{const u=new URL(url);if(u.protocol!=='https:')return el('span',text);a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';}catch{return el('span',text);}return a;}
   function render(){
-    const current=data?.date===day(),items=current?data.items:[];
+    const current=data?.date===day(),items=current?data.items.filter(x=>x.type!=='Reunião'||/^(encerrad[ao]|realizad[ao]|concluid[ao]|finalizad[ao])\b/.test(String(x.status||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').trim().toLowerCase())):[];
     const text=$('#pais-search').value.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();
     const selected=items.filter(x=>(theme==='Todos'||x.themes.includes(theme))&&(type==='Tudo'||x.type===type)&&(!text||(x.title+' '+x.summary+' '+x.source).normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().includes(text)));
     const priority={'Notícia':0,'Votação':1,'Reunião':2,'Proposta':3,'Despesa':4};selected.sort((a,b)=>priority[a.type]-priority[b.type]||b.date.localeCompare(a.date));
@@ -16,7 +16,7 @@
     for(const x of selected.slice(0,limit)){
       const card=el('article',null,'pais-card'),meta=el('div',null,'pais-meta');meta.append(el('span',x.type,'pill'),el('span',x.source));card.append(meta,el('h3',x.title));
       const tags=el('div',null,'pais-tags');for(const t of x.themes)tags.append(el('span',t));card.append(tags);
-      if(x.scope){const scope=el('span','Âmbito sugerido: '+x.scope.label,'pais-scope');scope.title=x.scope.basis;scope.tabIndex=0;scope.setAttribute('aria-label','Âmbito sugerido: '+x.scope.label+'. '+x.scope.basis);tags.append(scope);if(x.scope.place)tags.append(el('span',x.scope.place));}
+      if(x.scope){if(x.scope.label!=='A confirmar'){const scope=el('span','Âmbito sugerido: '+x.scope.label,'pais-scope');scope.title=x.scope.basis;scope.tabIndex=0;scope.setAttribute('aria-label','Âmbito sugerido: '+x.scope.label+'. '+x.scope.basis);tags.append(scope);}if(x.scope.place)tags.append(el('span',x.scope.place));}
       card.append(el('p',x.summary||'Consulte o registro oficial para conhecer os detalhes.'));
       if(x.status)card.append(el('p',x.status,'pais-status'));
       if(x.type==='Reunião'&&x.date.includes('T'))card.append(el('p','Horário informado: '+x.date.slice(11,16)+' · Brasília','pais-status'));

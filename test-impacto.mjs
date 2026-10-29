@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {territorialScope,describedImpact} from './impacto.mjs';
+import {territorialScope,describedImpact,isCompletedMeeting} from './impacto.mjs';
 const proposal=summary=>({title:'PL 1/2026',type:'Proposta',summary});
 assert.equal(territorialScope(proposal('Altera o Código Penal para vedar uma conduta.')).label,'Nacional');
 assert.equal(territorialScope(proposal('Destina recursos ao Estado do Pará.')).label,'Estadual · Pará');
@@ -10,3 +10,7 @@ assert.equal(territorialScope(proposal('Institui um programa nacional com projet
 assert.equal(describedImpact(proposal('Altera o Código Penal para vedar uma conduta.')).text,'Propõe vedar uma conduta.');
 assert(describedImpact({...proposal('Parecer favorável.'),title:'PRL 1'}).text.includes('não representa aprovação final'));
 console.log('OK: alcance nacional/local, menção territorial sem alcance presumido, local da reunião e efeito legislativo.');
+for(const status of ['Encerrada','Realizada','Concluída','Finalizada'])assert(isCompletedMeeting({type:'Reunião',status}));
+for(const status of ['Agendada','Convocada','Aberta','Em andamento','Cancelada','Não realizada','A realizar',''])assert(!isCompletedMeeting({type:'Reunião',status}));
+assert(isCompletedMeeting({type:'Proposta',status:'Apresentada hoje'}));
+console.log('OK: só reuniões concluídas; agenda, andamento e cancelamentos excluídos.');

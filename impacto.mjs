@@ -2,6 +2,7 @@ const clean=s=>String(s||'').replace(/\s+/g,' ').trim();
 const plain=s=>clean(s).normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();
 const shorten=(s,n=230)=>s.length<=n?s:s.slice(0,n).replace(/\s+\S*$/,'')+'…';
 const states=['Acre','Alagoas','Amapá','Amazonas','Bahia','Ceará','Distrito Federal','Espírito Santo','Goiás','Maranhão','Mato Grosso do Sul','Mato Grosso','Minas Gerais','Pará','Paraíba','Paraná','Pernambuco','Piauí','Rio de Janeiro','Rio Grande do Norte','Rio Grande do Sul','Rondônia','Roraima','Santa Catarina','São Paulo','Sergipe','Tocantins'];
+export function isCompletedMeeting(item) {return item.type!=='Reunião'||/^(encerrad[ao]|realizad[ao]|concluid[ao]|finalizad[ao])\b/.test(plain(item.status));}
 export function territorialScope(item) {
   // Only subject matter: the source institution and venue are not the measure's reach.
   const text=clean(item.title+' '+item.summary),s=plain(text);
