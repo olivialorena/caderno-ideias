@@ -1,0 +1,36 @@
+name: País Hoje
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Coletar registros oficiais de hoje (Brasília)
+        run: node collect-pais-hoje.mjs
+      - name: Preparar somente arquivos públicos do site
+        run: |
+          mkdir _site
+          cp index.html config.js supabase-2.118.0.js pais-hoje.js pais-hoje.css pais-hoje.json .nojekyll _site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Publicar no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
